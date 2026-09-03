@@ -38,7 +38,7 @@ footer{font-size:12px;color:#7a8494;text-align:center;margin-top:22px}
 
 <div id="workout" class="card hidden">
 <h2>Workout check-in</h2>
-<div class="muted">Tap exactly the two lifts you did today.</div>
+<div class="muted">Tap the lift or lifts you did today.</div>
 <div id="exercises" class="grid" style="margin-top:10px"></div>
 <h3>Pain when leaving the gym</h3>
 <div id="leavePain" class="grid3"></div>
@@ -123,7 +123,7 @@ document.getElementById("events").innerHTML=eventDefs.map(e=>`<button onclick="l
 
 function saveWorkout(){
  const ex=vals("exercises"),p=vals("leavePain")[0],loc=vals("location")[0];
- if(ex.length!==2){alert("Please tap exactly the two lifts you did.");return}
+ if(ex.length<1){alert("Please tap at least one lift you did.");return}
  if(p===undefined||!loc){alert("Please tap pain and location.");return}
  const k=todayKey();data.days[k]??={};
  data.days[k].workout={time:now(),exercises:ex,pain:+p,location:loc};
