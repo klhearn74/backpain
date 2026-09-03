@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172033">
+<title>Back Pain Tracker</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f8;color:#172033}
+.app{max-width:620px;margin:auto;padding:18px 16px 34px}
+h1{font-size:28px;margin:8px 0 2px}.sub{color:#687386;font-size:14px;margin-bottom:18px}
+.card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 2px 10px #0000000d}
+button{border:0;border-radius:14px;background:#e9edf3;color:#172033;padding:13px 12px;font-size:16px;font-weight:600;min-height:48px}
+button:active{transform:scale(.98)}button.primary{background:#172033;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+h2{font-size:18px;margin:0 0 11px}h3{font-size:15px;margin:17px 0 8px}.muted{font-size:13px;color:#718096}
+.selected{outline:3px solid #172033;background:#dfe5ee}.hidden{display:none}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.danger{background:#fff0f0;color:#a33}.log{font-size:13px;border-top:1px solid #edf0f4;padding:9px 0}.log:first-child{border-top:0}
+footer{font-size:12px;color:#7a8494;text-align:center;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>Back Pain Tracker</h1>
+<div class="sub">Tap-only tracking • saves automatically on this phone</div>
+
+<div class="card">
+<div class="row"><h2>Today</h2><span id="date" class="muted"></span></div>
+<div class="grid">
+<button class="primary" onclick="show('workout')">Workout check-in</button>
+<button onclick="show('event')">Log an event</button>
+<button onclick="show('end')">End of walk day</button>
+<button onclick="show('insights')">Insights</button>
+</div>
+</div>
+
+<div id="workout" class="card hidden">
+<h2>Workout check-in</h2>
+<div class="muted">Tap exactly the two lifts you did today.</div>
+<div id="exercises" class="grid" style="margin-top:10px"></div>
+<h3>Pain when leaving the gym</h3>
+<div id="leavePain" class="grid3"></div>
+<h3>Where?</h3>
+<div id="location" class="grid"></div>
+<div style="margin-top:12px"><button class="primary" onclick="saveWorkout()">Save workout</button></div>
+</div>
+
+<div id="event" class="card hidden">
+<h2>Quick event</h2>
+<div class="muted">One tap records the time automatically.</div>
+<div id="events" class="grid" style="margin-top:10px"></div>
+</div>
+
+<div id="end" class="card hidden">
+<h2>End of walk day</h2>
+<div class="muted">Use this for the day's overall peak and current pain.</div>
+<h3>Highest pain today</h3><div id="peakPain" class="grid3"></div>
+<h3>Current pain now</h3><div id="nowPain" class="grid3"></div>
+<h3>Where is it now?</h3><div id="endLocation" class="grid"></div>
+<div style="margin-top:12px"><button class="primary" onclick="saveEnd()">Save end-of-day</button></div>
+</div>
+
+<div id="insights" class="card hidden">
+<h2>Insights</h2>
+<div id="insightText" class="muted">Log some days first.</div>
+<div style="margin-top:12px" class="grid">
+<button onclick="exportCSV()">Export CSV</button>
+<button class="danger" onclick="clearAll()">Erase all data</button>
+</div>
+</div>
+
+<div class="card">
+<h2>Recent timeline</h2>
+<div id="timeline" class="muted">Nothing logged yet.</div>
+</div>
+
+<footer>Data is stored locally in this browser. Export a CSV regularly for backup or to share with a clinician.</footer>
+</div>
+
+<script>
+const exercises=[
+"Isolated bicep curl","Seated single-arm cable row","Single-leg step-up","Walking lunge",
+"Single-arm incline cross-body skull crusher","Flat-bench alternating skull crusher",
+"Seated single-arm Arnold press","Dumbbell Bulgarian split squat","Cross-bench dumbbell pullover",
+"Alternating dumbbell chest press","Alternating incline dumbbell curls",
+"Incline alternating dumbbell press","Seated alternating dumbbell shoulder press"
+];
+const locations=["Mid-back / near ribs","Left of spine","Right of spine","Left SI region","Right SI region","Both / unsure"];
+const eventDefs=[
+["Pain increased","pain_up"],["Pain decreased","pain_down"],["Uphill","uphill"],["Downhill","downhill"],
+["Dogs pulling hard","dogs_pull"],["Standing forward fold helped","fold_help"],
+["Back-muscle flexing helped","flex_help"],["Stopped walking","stop_walk"]
+];
+
+let data=JSON.parse(localStorage.getItem("backTrackerV1")||'{"days":{},"events":[]}');
+const todayKey=()=>new Date().toISOString().slice(0,10);
+const now=()=>new Date().toISOString();
+
+function save(){localStorage.setItem("backTrackerV1",JSON.stringify(data));renderTimeline();renderInsights()}
+function show(id){
+ ["workout","event","end","insights"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id));
+ if(id==="insights")renderInsights();
+}
+function makeButtons(id,arr,multi=false){
+ document.getElementById(id).innerHTML=arr.map(x=>`<button data-v="${String(x).replaceAll('"','&quot;')}" onclick="pick(this,${multi})">${x}</button>`).join("");
+}
+function pick(b,multi){
+ if(!multi)[...b.parentNode.children].forEach(x=>x.classList.remove("selected"));
+ b.classList.toggle("selected");
+}
+function vals(id){return [...document.querySelectorAll("#"+id+" .selected")].map(x=>x.dataset.v)}
+
+document.getElementById("date").textContent=new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"});
+makeButtons("exercises",exercises,true);
+makeButtons("leavePain",[0,1,2,3,4,5,6,7,8,9,10]);
+makeButtons("location",locations);
+makeButtons("peakPain",[0,1,2,3,4,5,6,7,8,9,10]);
+makeButtons("nowPain",[0,1,2,3,4,5,6,7,8,9,10]);
+makeButtons("endLocation",locations);
+document.getElementById("events").innerHTML=eventDefs.map(e=>`<button onclick="logEvent('${e[1]}','${e[0]}')">${e[0]}</button>`).join("");
+
+function saveWorkout(){
+ const ex=vals("exercises"),p=vals("leavePain")[0],loc=vals("location")[0];
+ if(ex.length!==2){alert("Please tap exactly the two lifts you did.");return}
+ if(p===undefined||!loc){alert("Please tap pain and location.");return}
+ const k=todayKey();data.days[k]??={};
+ data.days[k].workout={time:now(),exercises:ex,pain:+p,location:loc};
+ save();show("event");
+}
+function logEvent(type,label){
+ data.events.push({time:now(),type,label});save();
+ if(navigator.vibrate)navigator.vibrate(12);
+}
+function saveEnd(){
+ const peak=vals("peakPain")[0],cur=vals("nowPain")[0],loc=vals("endLocation")[0];
+ if(peak===undefined||cur===undefined||!loc){alert("Please answer all three.");return}
+ const k=todayKey();data.days[k]??={};
+ data.days[k].end={time:now(),peak:+peak,current:+cur,location:loc};
+ save();show("insights");
+}
+function renderTimeline(){
+ let items=[];
+ Object.values(data.days).forEach(v=>{
+  if(v.workout)items.push({time:v.workout.time,text:`Workout: ${v.workout.exercises.join(" + ")} • pain ${v.workout.pain}/10 • ${v.workout.location}`});
+  if(v.end)items.push({time:v.end.time,text:`End day: peak ${v.end.peak}/10 • now ${v.end.current}/10 • ${v.end.location}`});
+ });
+ data.events.forEach(e=>items.push({time:e.time,text:e.label}));
+ items.sort((a,b)=>b.time.localeCompare(a.time));
+ document.getElementById("timeline").innerHTML=items.slice(0,25).map(x=>`<div class="log"><b>${new Date(x.time).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</b><br>${x.text}</div>`).join("")||"Nothing logged yet.";
+}
+function avg(a){return a.length?(a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):"—"}
+function renderInsights(){
+ const ds=Object.values(data.days),ends=ds.map(x=>x.end).filter(Boolean),ws=ds.map(x=>x.workout).filter(Boolean);
+ if(!ds.length){document.getElementById("insightText").textContent="No data yet.";return}
+ const ex={};ws.forEach(w=>w.exercises.forEach(e=>(ex[e]??=[]).push(w.pain)));
+ const lines=[
+ `Days logged: ${ds.length}`,
+ `Average pain leaving gym: ${avg(ws.map(x=>x.pain))}/10`,
+ `Average peak pain: ${avg(ends.map(x=>x.peak))}/10`,
+ `Average end-of-day pain: ${avg(ends.map(x=>x.current))}/10`
+ ];
+ const ranked=Object.entries(ex).sort((a,b)=>Number(avg(b[1]))-Number(avg(a[1])));
+ if(ranked.length)lines.push("Exercises associated with higher gym-exit pain so far: "+ranked.slice(0,4).map(x=>`${x[0]} (${avg(x[1])}/10)`).join(" • "));
+ document.getElementById("insightText").innerHTML=lines.map(x=>`<div style="margin:7px 0">${x}</div>`).join("");
+}
+function exportCSV(){
+ const rows=[["type","date/time","details"]];
+ Object.values(data.days).forEach(v=>{
+  if(v.workout)rows.push(["workout",v.workout.time,`exercises=${v.workout.exercises.join(" | ")}; pain=${v.workout.pain}; location=${v.workout.location}`]);
+  if(v.end)rows.push(["end_of_day",v.end.time,`peak=${v.end.peak}; current=${v.end.current}; location=${v.end.location}`]);
+ });
+ data.events.forEach(e=>rows.push(["event",e.time,e.label]));
+ const csv=rows.map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(",")).join("\n");
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+ a.download="back-pain-tracker.csv";a.click();
+}
+function clearAll(){
+ if(confirm("Erase all tracker data? This cannot be undone.")){
+  localStorage.removeItem("backTrackerV1");data={days:{},events:[]};renderTimeline();renderInsights();
+ }
+}
+renderTimeline();renderInsights();
+</script>
+</body>
+</html>
