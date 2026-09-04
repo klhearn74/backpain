@@ -1,4 +1,5 @@
 <!doctype html>
+
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -87,7 +88,17 @@ const exercises=[
 "Alternating dumbbell chest press","Alternating incline dumbbell curls",
 "Incline alternating dumbbell press","Seated alternating dumbbell shoulder press"
 ];
-const locations=["Mid-back / near ribs","Left of spine","Right of spine","Left SI region","Right SI region","Both / unsure"];
+
+const locations=[
+"No pain",
+"Mid-back / near ribs",
+"Left of spine",
+"Right of spine",
+"Left SI region",
+"Right SI region",
+"Both / unsure"
+];
+
 const eventDefs=[
 ["Pain increased","pain_up"],["Pain decreased","pain_down"],["Uphill","uphill"],["Downhill","downhill"],
 ["Dogs pulling hard","dogs_pull"],["Standing forward fold helped","fold_help"],
@@ -129,10 +140,12 @@ function saveWorkout(){
  data.days[k].workout={time:now(),exercises:ex,pain:+p,location:loc};
  save();show("event");
 }
+
 function logEvent(type,label){
  data.events.push({time:now(),type,label});save();
  if(navigator.vibrate)navigator.vibrate(12);
 }
+
 function saveEnd(){
  const peak=vals("peakPain")[0],cur=vals("nowPain")[0],loc=vals("endLocation")[0];
  if(peak===undefined||cur===undefined||!loc){alert("Please answer all three.");return}
@@ -140,6 +153,7 @@ function saveEnd(){
  data.days[k].end={time:now(),peak:+peak,current:+cur,location:loc};
  save();show("insights");
 }
+
 function renderTimeline(){
  let items=[];
  Object.values(data.days).forEach(v=>{
@@ -150,7 +164,9 @@ function renderTimeline(){
  items.sort((a,b)=>b.time.localeCompare(a.time));
  document.getElementById("timeline").innerHTML=items.slice(0,25).map(x=>`<div class="log"><b>${new Date(x.time).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</b><br>${x.text}</div>`).join("")||"Nothing logged yet.";
 }
+
 function avg(a){return a.length?(a.reduce((s,x)=>s+x,0)/a.length).toFixed(1):"—"}
+
 function renderInsights(){
  const ds=Object.values(data.days),ends=ds.map(x=>x.end).filter(Boolean),ws=ds.map(x=>x.workout).filter(Boolean);
  if(!ds.length){document.getElementById("insightText").textContent="No data yet.";return}
@@ -165,6 +181,7 @@ function renderInsights(){
  if(ranked.length)lines.push("Exercises associated with higher gym-exit pain so far: "+ranked.slice(0,4).map(x=>`${x[0]} (${avg(x[1])}/10)`).join(" • "));
  document.getElementById("insightText").innerHTML=lines.map(x=>`<div style="margin:7px 0">${x}</div>`).join("");
 }
+
 function exportCSV(){
  const rows=[["type","date/time","details"]];
  Object.values(data.days).forEach(v=>{
@@ -177,12 +194,15 @@ function exportCSV(){
  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
  a.download="back-pain-tracker.csv";a.click();
 }
+
 function clearAll(){
  if(confirm("Erase all tracker data? This cannot be undone.")){
   localStorage.removeItem("backTrackerV1");data={days:{},events:[]};renderTimeline();renderInsights();
  }
 }
+
 renderTimeline();renderInsights();
 </script>
+
 </body>
 </html>
