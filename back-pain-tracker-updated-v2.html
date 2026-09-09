@@ -1,0 +1,1469 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#172033">
+<title>Back Pain Tracker</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#f5f6f8;
+  color:#172033
+}
+.app{
+  max-width:620px;
+  margin:auto;
+  padding:18px 16px 34px
+}
+h1{font-size:28px;margin:8px 0 2px}
+.sub{color:#687386;font-size:14px;margin-bottom:18px}
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  margin:12px 0;
+  box-shadow:0 2px 10px #0000000d
+}
+button{
+  border:0;
+  border-radius:14px;
+  background:#e9edf3;
+  color:#172033;
+  padding:13px 12px;
+  font-size:16px;
+  font-weight:600;
+  min-height:48px
+}
+button:active{transform:scale(.98)}
+button.primary{background:#172033;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+h2{font-size:18px;margin:0 0 11px}
+h3{font-size:15px;margin:17px 0 8px}
+.muted{font-size:13px;color:#718096}
+.selected{outline:3px solid #172033;background:#dfe5ee}
+.hidden{display:none}
+.row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px
+}
+.danger{background:#fff0f0;color:#a33}
+.log{
+  font-size:13px;
+  border-top:1px solid #edf0f4;
+  padding:9px 0
+}
+.log:first-child{border-top:0}
+.section-note{
+  font-size:12px;
+  color:#7a8494;
+  margin:-3px 0 9px
+}
+footer{
+  font-size:12px;
+  color:#7a8494;
+  text-align:center;
+  margin-top:22px
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>Back Pain Tracker</h1>
+<div class="sub">
+Tap-only tracking • saves automatically on this phone
+</div>
+
+<!-- TODAY -->
+
+<div class="card">
+
+<div class="row">
+  <h2>Today</h2>
+  <span id="date" class="muted"></span>
+</div>
+
+<div class="grid">
+  <button onclick="show('morning')">
+    Morning baseline
+  </button>
+
+  <button class="primary" onclick="show('workout')">
+    Workout / activity
+  </button>
+
+  <button onclick="show('event')">
+    Log an event
+  </button>
+
+  <button onclick="show('end')">
+    End-of-day check-in
+  </button>
+
+  <button onclick="show('insights')">
+    Insights
+  </button>
+</div>
+
+</div>
+
+
+<!-- MORNING BASELINE -->
+
+<div id="morning" class="card hidden">
+
+<h2>Morning baseline</h2>
+
+<div class="muted">
+Record your back tension/pain upon waking, before any workout, walking, or other activity.
+</div>
+
+<h3>Back tension / pain upon waking</h3>
+
+<div id="morningPain" class="grid3"></div>
+
+<h3>Anything unusual?</h3>
+
+<div class="section-note">
+Optional free-write note — anything you noticed this morning that seems relevant.
+</div>
+
+<textarea id="morningNotes" placeholder="e.g. stiffness, different location, slept differently, etc."></textarea>
+
+<div style="margin-top:12px">
+  <button class="primary" onclick="saveMorning()">
+    Save morning baseline
+  </button>
+</div>
+
+</div>
+
+<!-- WORKOUT / ACTIVITY -->
+
+<div id="workout" class="card hidden">
+
+<h2>Workout / activity</h2>
+
+<div class="muted">
+Record what you actually did today. You can select strength training, treadmill walking, both, or no exercise.
+</div>
+
+<h3>Strength training</h3>
+
+<div class="section-note">
+Select all lifts you did, or choose No strength training.
+</div>
+
+<div id="strengthExercises" class="grid"></div>
+
+<h3>Walking / treadmill</h3>
+
+<div class="section-note">
+Choose what kind of treadmill walking you did, or choose No treadmill.
+</div>
+
+<div id="treadmillOptions" class="grid"></div>
+
+<h3>Pain after workout / activity</h3>
+
+<div class="section-note">
+If you did no activity and this question does not apply, choose Not applicable.
+</div>
+
+<div id="leavePain" class="grid3"></div>
+
+<h3>Where?</h3>
+
+<div id="location" class="grid"></div>
+
+<h3>Anything unusual?</h3>
+
+<div class="section-note">
+Optional free-write note — use this for anything that doesn't fit the buttons, such as hip tension, a new sensation, or something unusual during the activity.
+</div>
+
+<textarea id="workoutNotes" placeholder="Anything unusual or worth remembering?"></textarea>
+
+<div style="margin-top:12px">
+  <button class="primary" onclick="saveWorkout()">
+    Save check-in
+  </button>
+</div>
+
+</div>
+
+<!-- QUICK EVENT -->
+
+<div id="event" class="card hidden">
+
+<h2>Quick event</h2>
+
+<div class="muted">
+One tap records the time automatically.
+</div>
+
+<div id="events" class="grid" style="margin-top:10px"></div>
+
+</div>
+
+<!-- END OF DAY -->
+
+<div id="end" class="card hidden">
+
+<h2>End-of-day check-in</h2>
+
+<div class="muted">
+Record the day's overall pain, whether you walked or not.
+</div>
+
+<h3>Highest pain today</h3>
+
+<div id="peakPain" class="grid3"></div>
+
+<h3>Current pain now</h3>
+
+<div id="nowPain" class="grid3"></div>
+
+<h3>Where is it now?</h3>
+
+<div id="endLocation" class="grid"></div>
+
+<h3>Anything unusual?</h3>
+
+<div class="section-note">
+Optional free-write note — anything important from the day that isn't captured elsewhere.
+</div>
+
+<textarea id="endNotes" placeholder="Anything unusual or worth remembering?"></textarea>
+
+<div style="margin-top:12px">
+  <button class="primary" onclick="saveEnd()">
+    Save end-of-day
+  </button>
+</div>
+
+</div>
+
+<!-- INSIGHTS -->
+
+<div id="insights" class="card hidden">
+
+<h2>Insights</h2>
+
+<div id="insightText" class="muted">
+Log some days first.
+</div>
+
+<div style="margin-top:12px" class="grid">
+  <button onclick="exportCSV()">Export CSV</button>
+  <button class="danger" onclick="clearAll()">Erase all data</button>
+</div>
+
+</div>
+
+<!-- TIMELINE -->
+
+<div class="card">
+
+<h2>Recent timeline</h2>
+
+<div id="timeline" class="muted">
+Nothing logged yet.
+</div>
+
+</div>
+
+<footer>
+Data is stored locally in this browser.
+Export a CSV regularly for backup or to share with a clinician.
+</footer>
+
+</div>
+
+<script>
+
+/* =========================================================
+   ACTIVITY DEFINITIONS
+   ========================================================= */
+
+const strengthExercises = [
+
+  "No strength training",
+
+  "Isolated bicep curl",
+  "Seated single-arm cable row",
+  "Single-leg step-up",
+  "Walking lunge",
+  "Single-arm incline cross-body skull crusher",
+  "Flat-bench alternating skull crusher",
+  "Seated single-arm Arnold press",
+  "Dumbbell Bulgarian split squat",
+  "Cross-bench dumbbell pullover",
+  "Alternating dumbbell chest press",
+  "Alternating incline dumbbell curls",
+  "Incline alternating dumbbell press",
+  "Seated alternating dumbbell shoulder press"
+
+];
+
+
+const treadmillOptions = [
+
+  "No treadmill",
+  "Flat treadmill walking",
+  "Incline treadmill walking"
+
+];
+
+
+const locations = [
+
+  "No pain / no location",
+  "Mid-back / near ribs",
+  "Left of spine",
+  "Right of spine",
+  "Left SI region",
+  "Right SI region",
+  "Both / unsure",
+  "Not applicable"
+
+];
+
+
+const painOptions = [
+
+  ["0","0 — No pain"],
+  ["1","1"],
+  ["2","2"],
+  ["3","3"],
+  ["4","4"],
+  ["5","5"],
+  ["6","6"],
+  ["7","7"],
+  ["8","8"],
+  ["9","9"],
+  ["10","10"],
+  ["na","Not applicable"]
+
+];
+
+
+const eventDefs = [
+
+  ["Pain increased","pain_up"],
+  ["Pain decreased","pain_down"],
+  ["No pain","no_pain"],
+  ["Uphill","uphill"],
+  ["Downhill","downhill"],
+  ["Dogs pulling hard","dogs_pull"],
+  ["Standing forward fold helped","fold_help"],
+  ["Back-muscle flexing helped","flex_help"],
+  ["Stopped walking","stop_walk"]
+
+];
+
+
+/* =========================================================
+   DATA
+   ========================================================= */
+
+let data = JSON.parse(
+  localStorage.getItem("backTrackerV1") ||
+  '{"days":{},"events":[]}'
+);
+
+
+/* =========================================================
+   BASIC HELPERS
+   ========================================================= */
+
+const todayKey = () =>
+  new Date().toISOString().slice(0,10);
+
+const now = () =>
+  new Date().toISOString();
+
+
+function save(){
+
+  localStorage.setItem(
+    "backTrackerV1",
+    JSON.stringify(data)
+  );
+
+  renderTimeline();
+  renderInsights();
+
+}
+
+
+function show(id){
+
+  ["morning","workout","event","end","insights"].forEach(x => {
+
+    document
+      .getElementById(x)
+      .classList
+      .toggle("hidden",x !== id);
+
+  });
+
+  if(id === "insights"){
+    renderInsights();
+  }
+
+}
+
+
+/* =========================================================
+   BUTTON CREATION
+   ========================================================= */
+
+function makeButtons(id,arr,multi=false){
+
+  document.getElementById(id).innerHTML =
+    arr.map(x => {
+
+      const value = Array.isArray(x) ? x[0] : x;
+      const label = Array.isArray(x) ? x[1] : x;
+
+      return `
+        <button
+          data-v="${String(value).replaceAll('"','&quot;')}"
+          onclick="pick(this,${multi},'${id}')">
+          ${label}
+        </button>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   SELECTION LOGIC
+   ========================================================= */
+
+function pick(button,multi,id){
+
+  /* Strength training has special "none" logic */
+  if(id === "strengthExercises"){
+
+    const isNone =
+      button.dataset.v === "No strength training";
+
+
+    if(isNone){
+
+      [...button.parentNode.children]
+        .forEach(x => x.classList.remove("selected"));
+
+      button.classList.add("selected");
+
+      return;
+    }
+
+
+    /* Selecting an exercise removes No strength training */
+    [...button.parentNode.children]
+      .forEach(x => {
+
+        if(x.dataset.v === "No strength training"){
+          x.classList.remove("selected");
+        }
+
+      });
+
+
+    button.classList.toggle("selected");
+
+    return;
+  }
+
+
+  /* Treadmill is single-choice */
+  if(id === "treadmillOptions"){
+
+    [...button.parentNode.children]
+      .forEach(x => x.classList.remove("selected"));
+
+    button.classList.add("selected");
+
+    return;
+  }
+
+
+  /* All other single-choice groups */
+  if(!multi){
+
+    [...button.parentNode.children]
+      .forEach(x => x.classList.remove("selected"));
+
+  }
+
+  button.classList.toggle("selected");
+
+}
+
+
+function vals(id){
+
+  return [
+    ...document.querySelectorAll(
+      "#" + id + " .selected"
+    )
+  ].map(x => x.dataset.v);
+
+}
+
+
+/* =========================================================
+   INITIALIZE UI
+   ========================================================= */
+
+document.getElementById("date").textContent =
+  new Date().toLocaleDateString(
+    undefined,
+    {
+      month:"short",
+      day:"numeric"
+    }
+  );
+
+
+makeButtons(
+  "strengthExercises",
+  strengthExercises,
+  true
+);
+
+
+makeButtons(
+  "treadmillOptions",
+  treadmillOptions,
+  false
+);
+
+
+makeButtons(
+  "leavePain",
+  painOptions
+);
+
+
+makeButtons(
+  "location",
+  locations
+);
+
+
+makeButtons(
+  "morningPain",
+  painOptions
+);
+
+makeButtons(
+  "peakPain",
+  painOptions
+);
+
+
+makeButtons(
+  "nowPain",
+  painOptions
+);
+
+
+makeButtons(
+  "endLocation",
+  locations
+);
+
+
+/* =========================================================
+   QUICK EVENTS
+   ========================================================= */
+
+document.getElementById("events").innerHTML =
+
+  eventDefs.map(e =>
+
+    `<button onclick="logEvent('${e[1]}','${e[0]}')">
+      ${e[0]}
+    </button>`
+
+  ).join("");
+
+
+
+/* =========================================================
+   MORNING BASELINE
+   ========================================================= */
+
+function saveMorning(){
+
+  const pain = vals("morningPain")[0];
+  const notes = document.getElementById("morningNotes").value.trim();
+
+  if(pain === undefined){
+
+    alert(
+      "Please select your morning back tension/pain, including 0 — No pain or Not applicable."
+    );
+
+    return;
+  }
+
+  const k = todayKey();
+
+  data.days[k] ??= {};
+
+  data.days[k].morning = {
+
+    time: now(),
+
+    pain:
+      pain === "na"
+        ? null
+        : +pain,
+
+    painApplicable:
+      pain !== "na",
+
+    notes: notes
+
+  };
+
+  save();
+
+  show("workout");
+
+}
+
+/* =========================================================
+   SAVE WORKOUT / ACTIVITY
+   ========================================================= */
+
+function saveWorkout(){
+
+  const strength = vals("strengthExercises");
+  const treadmill = vals("treadmillOptions")[0];
+
+  const pain = vals("leavePain")[0];
+  const location = vals("location")[0];
+  const notes = document.getElementById("workoutNotes").value.trim();
+
+
+  /* Must say whether strength happened */
+  if(strength.length < 1){
+
+    alert(
+      "Please select the strength training you did, or choose No strength training."
+    );
+
+    return;
+  }
+
+
+  /* Must say whether treadmill happened */
+  if(treadmill === undefined){
+
+    alert(
+      "Please select Flat treadmill walking, Incline treadmill walking, or No treadmill."
+    );
+
+    return;
+  }
+
+
+  /* Must record pain or N/A */
+  if(pain === undefined){
+
+    alert(
+      "Please select a pain level, including 0 — No pain, or Not applicable."
+    );
+
+    return;
+  }
+
+
+  /* Must record location */
+  if(location === undefined){
+
+    alert(
+      "Please select No pain / no location or Not applicable when appropriate."
+    );
+
+    return;
+  }
+
+
+  const k = todayKey();
+
+  data.days[k] ??= {};
+
+
+  const noStrength =
+    strength.includes("No strength training");
+
+
+  const noTreadmill =
+    treadmill === "No treadmill";
+
+
+  /*
+    If absolutely no activity was done, make that explicit.
+  */
+  const noWorkout =
+    noStrength && noTreadmill;
+
+
+  data.days[k].workout = {
+
+    time: now(),
+
+    strengthExercises:
+      noStrength
+        ? []
+        : strength,
+
+    treadmill:
+      noTreadmill
+        ? null
+        : treadmill,
+
+    noWorkout: noWorkout,
+
+    pain:
+      pain === "na"
+        ? null
+        : +pain,
+
+    painApplicable:
+      pain !== "na",
+
+    location: location,
+
+    notes: notes
+
+  };
+
+
+  save();
+
+  show("event");
+
+}
+
+
+/* =========================================================
+   QUICK EVENT
+   ========================================================= */
+
+function logEvent(type,label){
+
+  data.events.push({
+
+    time: now(),
+    type,
+    label
+
+  });
+
+
+  save();
+
+
+  if(navigator.vibrate){
+    navigator.vibrate(12);
+  }
+
+}
+
+
+/* =========================================================
+   END OF DAY
+   ========================================================= */
+
+function saveEnd(){
+
+  const peak = vals("peakPain")[0];
+  const current = vals("nowPain")[0];
+  const location = vals("endLocation")[0];
+  const notes = document.getElementById("endNotes").value.trim();
+
+
+  if(peak === undefined){
+
+    alert(
+      "Please select the highest pain today, including 0 — No pain or Not applicable."
+    );
+
+    return;
+  }
+
+
+  if(current === undefined){
+
+    alert(
+      "Please select your current pain, including 0 — No pain or Not applicable."
+    );
+
+    return;
+  }
+
+
+  if(location === undefined){
+
+    alert(
+      "Please select No pain / no location or Not applicable when appropriate."
+    );
+
+    return;
+  }
+
+
+  const k = todayKey();
+
+  data.days[k] ??= {};
+
+
+  data.days[k].end = {
+
+    time: now(),
+
+    peak:
+      peak === "na"
+        ? null
+        : +peak,
+
+    peakApplicable:
+      peak !== "na",
+
+    current:
+      current === "na"
+        ? null
+        : +current,
+
+    currentApplicable:
+      current !== "na",
+
+    location: location,
+
+    notes: notes
+
+  };
+
+
+  save();
+
+  show("insights");
+
+}
+
+
+/* =========================================================
+   PAIN DISPLAY
+   ========================================================= */
+
+function painText(value,applicable=true){
+
+  if(!applicable){
+    return "not applicable";
+  }
+
+  if(value === 0){
+    return "0/10 (no pain)";
+  }
+
+  return value + "/10";
+
+}
+
+
+/* =========================================================
+   TIMELINE
+   ========================================================= */
+
+function renderTimeline(){
+
+  let items = [];
+
+
+  Object.values(data.days).forEach(v => {
+
+    if(v.morning){
+
+      rows.push([
+
+        "morning_baseline",
+
+        v.morning.time,
+
+        `pain=${
+          v.morning.painApplicable
+            ? v.morning.pain
+            : "not applicable"
+        }; notes=${v.morning.notes || ""}`
+
+      ]);
+
+    }
+
+
+    if(v.workout){
+
+      let activityParts = [];
+
+
+      if(v.workout.noWorkout){
+
+        activityParts.push(
+          "No workout / did not exercise"
+        );
+
+      }else{
+
+        if(
+          v.workout.strengthExercises &&
+          v.workout.strengthExercises.length
+        ){
+
+          activityParts.push(
+            "Strength: " +
+            v.workout.strengthExercises.join(" + ")
+          );
+
+        }
+
+
+        if(v.workout.treadmill){
+
+          activityParts.push(
+            v.workout.treadmill
+          );
+
+        }
+
+      }
+
+
+      items.push({
+
+        time: v.workout.time,
+
+        text:
+          activityParts.join(" • ") +
+          " • pain " +
+          painText(
+            v.workout.pain,
+            v.workout.painApplicable
+          ) +
+          " • " +
+          v.workout.location +
+          (v.workout.notes ? " • note: " + v.workout.notes : "")
+
+      });
+
+    }
+
+
+    if(v.end){
+
+      items.push({
+
+        time: v.end.time,
+
+        text:
+          "End day: peak " +
+          painText(
+            v.end.peak,
+            v.end.peakApplicable
+          ) +
+          " • now " +
+          painText(
+            v.end.current,
+            v.end.currentApplicable
+          ) +
+          " • " +
+          v.end.location +
+          (v.end.notes ? " • note: " + v.end.notes : "")
+
+      });
+
+    }
+
+  });
+
+
+  data.events.forEach(e => {
+
+    items.push({
+
+      time: e.time,
+      text: e.label
+
+    });
+
+  });
+
+
+  items.sort(
+    (a,b) =>
+      b.time.localeCompare(a.time)
+  );
+
+
+  document.getElementById("timeline").innerHTML =
+
+    items
+      .slice(0,25)
+      .map(x =>
+
+        `<div class="log">
+
+          <b>
+            ${new Date(x.time).toLocaleString(
+              undefined,
+              {
+                month:"short",
+                day:"numeric",
+                hour:"numeric",
+                minute:"2-digit"
+              }
+            )}
+          </b>
+
+          <br>
+
+          ${x.text}
+
+        </div>`
+
+      )
+      .join("") ||
+
+      "Nothing logged yet.";
+
+}
+
+
+/* =========================================================
+   AVERAGES
+   ========================================================= */
+
+function avg(a){
+
+  return a.length
+    ? (
+        a.reduce(
+          (s,x) => s + x,
+          0
+        ) / a.length
+      ).toFixed(1)
+
+    : "—";
+
+}
+
+
+/* =========================================================
+   INSIGHTS
+   ========================================================= */
+
+function renderInsights(){
+
+  const days =
+    Object.values(data.days);
+
+
+  const ends =
+    days
+      .map(x => x.end)
+      .filter(Boolean);
+
+
+  const workouts =
+    days
+      .map(x => x.workout)
+      .filter(Boolean);
+
+
+  if(!days.length){
+
+    document.getElementById(
+      "insightText"
+    ).textContent = "No data yet.";
+
+    return;
+
+  }
+
+
+  /* -----------------------------------------
+     Exercise-associated pain
+     ----------------------------------------- */
+
+  const exercisePain = {};
+
+
+  workouts.forEach(w => {
+
+    if(!w.painApplicable){
+      return;
+    }
+
+
+    if(
+      !w.strengthExercises ||
+      !w.strengthExercises.length
+    ){
+      return;
+    }
+
+
+    w.strengthExercises.forEach(ex => {
+
+      (
+        exercisePain[ex] ??
+        (exercisePain[ex] = [])
+      ).push(w.pain);
+
+    });
+
+  });
+
+
+  /* -----------------------------------------
+     Treadmill-associated pain
+     ----------------------------------------- */
+
+  const treadmillPain = {};
+
+
+  workouts.forEach(w => {
+
+    if(
+      !w.painApplicable ||
+      !w.treadmill
+    ){
+      return;
+    }
+
+
+    (
+      treadmillPain[w.treadmill] ??
+      (treadmillPain[w.treadmill] = [])
+    ).push(w.pain);
+
+  });
+
+
+  /* -----------------------------------------
+     Overall pain
+     ----------------------------------------- */
+
+  const gymPain =
+    workouts
+      .filter(x => x.painApplicable)
+      .map(x => x.pain);
+
+
+  const peakPain =
+    ends
+      .filter(x => x.peakApplicable)
+      .map(x => x.peak);
+
+
+  const currentPain =
+    ends
+      .filter(x => x.currentApplicable)
+      .map(x => x.current);
+
+
+  const lines = [
+
+    `Days logged: ${days.length}`,
+
+    `Average pain after workout / activity: ${avg(gymPain)}/10`,
+
+    `Average peak pain: ${avg(peakPain)}/10`,
+
+    `Average end-of-day pain: ${avg(currentPain)}/10`
+
+  ];
+
+
+  /* -----------------------------------------
+     Treadmill comparison
+     ----------------------------------------- */
+
+  const treadmillEntries =
+    Object.entries(treadmillPain);
+
+
+  if(treadmillEntries.length){
+
+    lines.push(
+      "Treadmill activity pain: " +
+      treadmillEntries
+        .map(
+          x =>
+            `${x[0]} (${avg(x[1])}/10, ${x[1].length} session${x[1].length===1?"":"s"})`
+        )
+        .join(" • ")
+    );
+
+  }
+
+
+  /* -----------------------------------------
+     Strength exercise ranking
+     ----------------------------------------- */
+
+  const ranked =
+    Object.entries(exercisePain)
+      .sort(
+        (a,b) =>
+          Number(avg(b[1])) -
+          Number(avg(a[1]))
+      );
+
+
+  if(ranked.length){
+
+    lines.push(
+
+      "Exercises associated with higher post-workout pain so far: " +
+
+      ranked
+        .slice(0,4)
+        .map(
+          x =>
+            `${x[0]} (${avg(x[1])}/10)`
+        )
+        .join(" • ")
+
+    );
+
+  }
+
+
+  document.getElementById(
+    "insightText"
+  ).innerHTML =
+
+    lines
+      .map(
+        x =>
+          `<div style="margin:7px 0">${x}</div>`
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   CSV EXPORT
+   ========================================================= */
+
+function exportCSV(){
+
+  const rows = [
+
+    [
+      "type",
+      "date/time",
+      "details"
+    ]
+
+  ];
+
+
+  Object.values(data.days).forEach(v => {
+
+    if(v.morning){
+
+      items.push({
+
+        time: v.morning.time,
+
+        text:
+          "Morning baseline: " +
+          painText(
+            v.morning.pain,
+            v.morning.painApplicable
+          ) +
+          (v.morning.notes ? " • note: " + v.morning.notes : "")
+
+      });
+
+    }
+
+
+    if(v.workout){
+
+      const strength =
+        v.workout.noWorkout
+          ? "none"
+          : (
+              v.workout.strengthExercises &&
+              v.workout.strengthExercises.length
+            )
+              ? v.workout.strengthExercises.join(" | ")
+              : "none";
+
+
+      const treadmill =
+        v.workout.treadmill ||
+        "none";
+
+
+      rows.push([
+
+        "workout",
+
+        v.workout.time,
+
+        `strength=${strength}; treadmill=${treadmill}; no_workout=${v.workout.noWorkout}; pain=${
+          v.workout.painApplicable
+            ? v.workout.pain
+            : "not applicable"
+        }; location=${v.workout.location}; notes=${v.workout.notes || ""}`
+
+      ]);
+
+    }
+
+
+    if(v.end){
+
+      rows.push([
+
+        "end_of_day",
+
+        v.end.time,
+
+        `peak=${
+          v.end.peakApplicable
+            ? v.end.peak
+            : "not applicable"
+        }; current=${
+          v.end.currentApplicable
+            ? v.end.current
+            : "not applicable"
+        }; location=${v.end.location}; notes=${v.end.notes || ""}`
+
+      ]);
+
+    }
+
+  });
+
+
+  data.events.forEach(e => {
+
+    rows.push([
+
+      "event",
+
+      e.time,
+
+      e.label
+
+    ]);
+
+  });
+
+
+  const csv =
+
+    rows
+      .map(
+        r =>
+          r
+            .map(
+              x =>
+                `"${String(x)
+                  .replaceAll('"','""')}"`
+            )
+            .join(",")
+      )
+      .join("\n");
+
+
+  const a =
+    document.createElement("a");
+
+
+  a.href =
+    URL.createObjectURL(
+      new Blob(
+        [csv],
+        {type:"text/csv"}
+      )
+    );
+
+
+  a.download =
+    "back-pain-tracker.csv";
+
+
+  a.click();
+
+}
+
+
+/* =========================================================
+   ERASE DATA
+   ========================================================= */
+
+function clearAll(){
+
+  if(
+    confirm(
+      "Erase all tracker data? This cannot be undone."
+    )
+  ){
+
+    localStorage.removeItem(
+      "backTrackerV1"
+    );
+
+
+    data = {
+      days:{},
+      events:[]
+    };
+
+
+    renderTimeline();
+    renderInsights();
+
+  }
+
+}
+
+
+/* =========================================================
+   INITIAL RENDER
+   ========================================================= */
+
+renderTimeline();
+renderInsights();
+
+</script>
+
+</body>
+</html>
